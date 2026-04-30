@@ -240,7 +240,7 @@ details {
 details summary {
   cursor: pointer;
   font-weight: 400;
-  color: var(--ink-soft);
+  color: var(--accent);
   list-style: none;
   padding: 0.4em 0;
   user-select: none;
@@ -252,12 +252,12 @@ details summary::before {
   content: '+ ';
   display: inline-block;
   width: 1.2em;
-  color: var(--ink-faint);
+  color: var(--accent);
 }
 
 details[open] summary::before { content: '− '; }
 
-details summary:hover { color: var(--accent); }
+details summary:hover { color: var(--ink); }
 
 dl.credits {
   display: grid;
