@@ -198,7 +198,10 @@ section {
 /* Lede */
 .lede { margin: 0 0 2em 0; }
 
-/* Pull quotes — typographic highlighting only. */
+/* Pull quotes — typographic only.
+   Voice is signalled by colour and a lighter weight against the
+   body text's regular weight. Critics speak softly in warm grey,
+   Marjut speaks in the accent red. */
 .pull {
   margin: 2.5em 0;
   padding: 0;
@@ -206,20 +209,23 @@ section {
 }
 
 .pull p {
-  margin: 0 0 0.5em 0;
-  color: var(--ink);
+  margin: 0 0 0.6em 0;
+  font-weight: 300;
+  color: var(--ink-soft);
 }
 
 .pull cite {
   font-style: normal;
-  color: var(--ink);
+  font-weight: 400;
+  color: var(--ink-soft);
   display: block;
 }
 
 .pull cite .src {
-  color: var(--ink-soft);
+  color: var(--ink-faint);
 }
 
+.pull.voice-marjut p { color: var(--accent); }
 .pull.voice-marjut cite { color: var(--accent); }
 
 /* Details / credits */
