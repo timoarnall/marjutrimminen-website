@@ -104,11 +104,14 @@
       // Paint grain — a fine-texture noise for the watercolour grain
       float grain = fbm(nuv * 6.0 + r) * 0.5 + 0.5;
 
-      // Threshold to brushstroke shape. Tuned so the wash naturally
-      // tapers and doesn't reach canvas edges — no radial mask.
-      float washA = smoothstep(0.40, 0.78, stroke);
-      float washB = smoothstep(0.46, 0.72, stroke2) * 0.55;
-      float density = (washA + washB) * (0.55 + grain * 0.45);
+      // Threshold to brushstroke shape. The wash is what survives the
+      // smoothstep — areas below 0.20 give nothing, 0.55 and above give
+      // full paint. fbm tends to centre around 0.45, so we get broad
+      // washes with naturally tapered organic boundaries.
+      float washA = smoothstep(0.18, 0.55, stroke);
+      float washB = smoothstep(0.22, 0.55, stroke2) * 0.6;
+      float density = washA + washB * 0.5;
+      density *= (0.7 + grain * 0.4);
       density = clamp(density, 0.0, 1.0);
 
       // Colour mixed across the warped field — different regions show
@@ -260,7 +263,7 @@
         ? marjutPalettes[(marjut_i++) % marjutPalettes.length]
         : criticPalettes[(critic_i++) % criticPalettes.length];
       const seed = ((i * 0.6180339887) % 1.0) * 10.0;
-      const alpha = isMarjut ? 0.42 : 0.32;
+      const alpha = isMarjut ? 0.65 : 0.50;
       setup(q, palette, seed, alpha);
     });
   }
