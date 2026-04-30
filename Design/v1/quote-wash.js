@@ -70,23 +70,36 @@
 
     void main() {
       vec2 uv = v_uv;
-      uv.x *= u_resolution.x / u_resolution.y;
+      float aspect = u_resolution.x / u_resolution.y;
 
       float t = u_time + u_seed * 23.0;
       vec2 offset1 = vec2(t * 0.013, t * 0.009);
       vec2 offset2 = vec2(-t * 0.011 + u_seed, t * 0.014);
 
-      float n1 = fbm(uv * 1.4 + offset1 + u_seed * 7.3);
-      float n2 = fbm(uv * 2.6 + offset2);
+      // Aspect-corrected centred coords for the soft radial mask
+      vec2 cuv = uv - 0.5;
+      cuv.x *= aspect;
 
-      // density: clouds where both layers reinforce each other
-      float density = pow(clamp(n1 * 1.3 + n2 * 0.6 - 0.15, 0.0, 1.0), 1.4);
+      // Perturb the radial distance with noise so the edge is organic
+      // (watercolour bleed) rather than a clean ellipse.
+      float edgeNoise = fbm(uv * 1.7 + offset1 + u_seed);
+      float dist = length(cuv * vec2(1.0, 1.5)) + (edgeNoise - 0.5) * 0.32;
 
-      // colour mix from soft to deep based on inverse density
+      // Soft falloff — never reaches the canvas edge.
+      float mask = 1.0 - smoothstep(0.10, 0.55, dist);
+      mask = pow(mask, 1.4);
+
+      // Internal cloud density and colour variation
+      vec2 nuv = uv * vec2(aspect, 1.0);
+      float n1 = fbm(nuv * 1.4 + offset1 + u_seed * 7.3);
+      float n2 = fbm(nuv * 2.6 + offset2);
+
+      float density = clamp(n1 * 1.1 + n2 * 0.6 - 0.05, 0.0, 1.0);
+
       float mixT = smoothstep(0.05, 0.85, n1 * 0.6 + n2 * 0.4);
       vec3 color = mix(u_color2, u_color1, mixT);
 
-      float alpha = density * u_alpha;
+      float alpha = density * mask * u_alpha;
       gl_FragColor = vec4(color, alpha);
     }
   `;
@@ -163,12 +176,11 @@
     gl.uniform1f(uAlpha, alpha);
 
     function resize() {
-      const rect = quote.getBoundingClientRect();
+      // Use the canvas's own laid-out size — CSS extends it beyond the quote.
+      const rect = canvas.getBoundingClientRect();
       const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
       canvas.width = Math.max(1, Math.floor(rect.width * dpr));
       canvas.height = Math.max(1, Math.floor(rect.height * dpr));
-      canvas.style.width = rect.width + 'px';
-      canvas.style.height = rect.height + 'px';
       gl.viewport(0, 0, canvas.width, canvas.height);
       gl.uniform2f(uRes, canvas.width, canvas.height);
     }

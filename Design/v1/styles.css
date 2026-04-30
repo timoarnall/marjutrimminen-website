@@ -200,20 +200,19 @@ section {
 .lede { max-width: 56ch; margin: 0 0 2em 0; }
 
 /* Pull quotes — text sits on a slowly drifting watercolour wash
-   rendered via WebGL shader (see quote-wash.js) */
+   rendered via WebGL shader (see quote-wash.js).
+   The wash spills well beyond the quote box and falls off softly. */
 .pull {
   position: relative;
-  margin: 1.8em 0 2.4em 0;
-  padding: 1em 1.6em;
+  margin: 3.5em 0;
+  padding: 0.4em 0.8em;
   border: none;
   max-width: 64ch;
-  isolation: isolate;
 }
 
-.pull p,
-.pull cite {
+.pull > *:not(canvas) {
   position: relative;
-  z-index: 2;
+  z-index: 1;
 }
 
 .pull p {
@@ -235,7 +234,10 @@ section {
 
 .quote-wash {
   position: absolute;
-  inset: 0;
+  top: -2.5em;
+  bottom: -2.5em;
+  left: -3em;
+  right: -3em;
   z-index: 0;
   display: block;
   pointer-events: none;
