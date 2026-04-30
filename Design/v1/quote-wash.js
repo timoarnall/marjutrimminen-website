@@ -71,35 +71,52 @@
     void main() {
       vec2 uv = v_uv;
       float aspect = u_resolution.x / u_resolution.y;
+      vec2 nuv = vec2(uv.x * aspect, uv.y);
 
       float t = u_time + u_seed * 23.0;
-      vec2 offset1 = vec2(t * 0.013, t * 0.009);
-      vec2 offset2 = vec2(-t * 0.011 + u_seed, t * 0.014);
+      vec2 off1 = vec2(t * 0.013, t * 0.009) + u_seed * 5.0;
+      vec2 off2 = vec2(-t * 0.011, t * 0.014) + u_seed * 3.7;
+      vec2 off3 = vec2(t * 0.008, -t * 0.012) + u_seed * 8.1;
 
-      // Aspect-corrected centred coords for the soft radial mask
-      vec2 cuv = uv - 0.5;
-      cuv.x *= aspect;
+      // Domain warp — sample fbm to get an offset, then sample fbm again
+      // at the warped coordinates. Produces organic, flowy shapes with no
+      // geometric primitives anywhere.
+      vec2 q = vec2(
+        fbm(nuv * 0.7 + off1),
+        fbm(nuv * 0.7 + off2)
+      );
+      vec2 r = vec2(
+        fbm(nuv * 1.2 + 4.0 * q + off3),
+        fbm(nuv * 1.2 + 4.0 * q + vec2(8.3, 2.8) + off1)
+      );
 
-      // Perturb the radial distance with noise so the edge is organic
-      // (watercolour bleed) rather than a clean ellipse.
-      float edgeNoise = fbm(uv * 1.7 + offset1 + u_seed);
-      float dist = length(cuv * vec2(1.0, 1.5)) + (edgeNoise - 0.5) * 0.32;
+      // The shape itself — a stretched-horizontal noise field, threshold-
+      // shaped into a brushstroke-like wash. The fbm inputs are biased
+      // (vec2 multiplier) so features are wider in x than y — gives a
+      // horizontal streak rather than blobs.
+      vec2 strokeUV = nuv * vec2(0.85, 2.4) + 1.5 * r;
+      float stroke = fbm(strokeUV);
 
-      // Soft falloff — never reaches the canvas edge.
-      float mask = 1.0 - smoothstep(0.10, 0.55, dist);
-      mask = pow(mask, 1.4);
+      // Secondary stroke at a different scale + offset for variety
+      vec2 strokeUV2 = nuv * vec2(1.3, 3.0) + 2.0 * q + off2;
+      float stroke2 = fbm(strokeUV2);
 
-      // Internal cloud density and colour variation
-      vec2 nuv = uv * vec2(aspect, 1.0);
-      float n1 = fbm(nuv * 1.4 + offset1 + u_seed * 7.3);
-      float n2 = fbm(nuv * 2.6 + offset2);
+      // Paint grain — a fine-texture noise for the watercolour grain
+      float grain = fbm(nuv * 6.0 + r) * 0.5 + 0.5;
 
-      float density = clamp(n1 * 1.1 + n2 * 0.6 - 0.05, 0.0, 1.0);
+      // Threshold to brushstroke shape. Tuned so the wash naturally
+      // tapers and doesn't reach canvas edges — no radial mask.
+      float washA = smoothstep(0.40, 0.78, stroke);
+      float washB = smoothstep(0.46, 0.72, stroke2) * 0.55;
+      float density = (washA + washB) * (0.55 + grain * 0.45);
+      density = clamp(density, 0.0, 1.0);
 
-      float mixT = smoothstep(0.05, 0.85, n1 * 0.6 + n2 * 0.4);
+      // Colour mixed across the warped field — different regions show
+      // different parts of the palette
+      float mixT = smoothstep(0.10, 0.85, length(r) + stroke * 0.3);
       vec3 color = mix(u_color2, u_color1, mixT);
 
-      float alpha = density * mask * u_alpha;
+      float alpha = density * u_alpha;
       gl_FragColor = vec4(color, alpha);
     }
   `;

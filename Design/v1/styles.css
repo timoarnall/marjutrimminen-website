@@ -234,10 +234,10 @@ section {
 
 .quote-wash {
   position: absolute;
-  top: -2.5em;
-  bottom: -2.5em;
-  left: -3em;
-  right: -3em;
+  top: -3.5em;
+  bottom: -3.5em;
+  left: -5em;
+  right: -5em;
   z-index: 0;
   display: block;
   pointer-events: none;
