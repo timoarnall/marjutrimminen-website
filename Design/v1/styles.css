@@ -199,32 +199,25 @@ section {
 /* Lede */
 .lede { max-width: 56ch; margin: 0 0 2em 0; }
 
-/* SVG filter holder — invisible */
-.filter-defs {
-  position: absolute;
-  width: 0;
-  height: 0;
-  overflow: hidden;
-}
-
-/* Pull quotes — text sits on a soft, slowly drifting brushstroke wash */
+/* Pull quotes — text sits on a slowly drifting watercolour wash
+   rendered via WebGL shader (see quote-wash.js) */
 .pull {
   position: relative;
-  margin: 1.8em 0 2em 0;
-  padding: 0.7em 1.4em;
+  margin: 1.8em 0 2.4em 0;
+  padding: 1em 1.6em;
   border: none;
-  max-width: 62ch;
+  max-width: 64ch;
   isolation: isolate;
 }
 
 .pull p,
 .pull cite {
   position: relative;
-  z-index: 1;
+  z-index: 2;
 }
 
 .pull p {
-  margin: 0 0 0.4em 0;
+  margin: 0 0 0.5em 0;
   color: var(--ink);
 }
 
@@ -238,23 +231,14 @@ section {
   color: var(--ink-faint);
 }
 
-.pull::before {
-  content: '';
-  position: absolute;
-  inset: -0.2em -0.6em;
-  z-index: 0;
-  background: rgba(22, 22, 19, 0.07);
-  filter: url(#brushstroke) blur(1.2px);
-  pointer-events: none;
-}
-
 .pull.voice-marjut cite { color: var(--accent); }
-.pull.voice-marjut::before {
-  background: rgba(168, 58, 37, 0.16);
-}
 
-@media (prefers-reduced-motion: reduce) {
-  .pull::before { filter: url(#brushstroke) blur(1.2px); }
+.quote-wash {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: block;
+  pointer-events: none;
 }
 
 /* Details / credits */
