@@ -7,21 +7,20 @@
 (() => {
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // Palettes in linear-ish RGB. Used under mix-blend-mode: multiply, so
-  // values represent the source colour the cream bg gets multiplied by.
-  // Lower values = stronger darkening.
+  // Palettes in linear-ish RGB. The shader multiplies these against
+  // the cream page colour. Lighter values = subtler darkening on cream.
   const criticPalettes = [
-    { c1: [0.45, 0.45, 0.42], c2: [0.78, 0.78, 0.72] }, // warm grey
-    { c1: [0.42, 0.44, 0.46], c2: [0.74, 0.76, 0.78] }, // cool grey
-    { c1: [0.48, 0.44, 0.38], c2: [0.80, 0.76, 0.68] }, // sepia
-    { c1: [0.44, 0.44, 0.42], c2: [0.76, 0.76, 0.72] }, // neutral
+    { c1: [0.78, 0.78, 0.74], c2: [0.92, 0.92, 0.88] }, // warm grey
+    { c1: [0.76, 0.78, 0.80], c2: [0.90, 0.92, 0.94] }, // cool grey
+    { c1: [0.80, 0.76, 0.70], c2: [0.93, 0.90, 0.84] }, // sepia
+    { c1: [0.78, 0.78, 0.76], c2: [0.92, 0.92, 0.90] }, // neutral
   ];
 
   const marjutPalettes = [
-    { c1: [0.78, 0.40, 0.32], c2: [0.95, 0.78, 0.72] }, // soft red → peach
-    { c1: [0.72, 0.36, 0.40], c2: [0.92, 0.74, 0.74] }, // dusty rose
-    { c1: [0.82, 0.46, 0.36], c2: [0.96, 0.82, 0.72] }, // peach
-    { c1: [0.70, 0.35, 0.34], c2: [0.90, 0.72, 0.68] }, // brick rose
+    { c1: [0.92, 0.68, 0.58], c2: [0.98, 0.88, 0.82] }, // soft red → peach
+    { c1: [0.90, 0.66, 0.66], c2: [0.97, 0.86, 0.86] }, // dusty rose
+    { c1: [0.94, 0.74, 0.62], c2: [0.98, 0.90, 0.82] }, // peach
+    { c1: [0.88, 0.62, 0.60], c2: [0.96, 0.84, 0.80] }, // brick rose
   ];
 
   const vsSource = `
@@ -85,15 +84,17 @@
       );
 
       // Splotch from the centre of the canvas, distance perturbed
-      // heavily by noise so the boundary is organic, not elliptical.
+      // by noise so the boundary is organic, not elliptical. Smaller
+      // centre-shift perturbations so the splotch reliably sits on
+      // the text. Wider falloff range so it covers the quote width.
       vec2 c = uv - 0.5;
       float dist = length(c);
-      dist += (length(r) - 0.7) * 0.35;
-      dist += (q.x - 0.5) * 0.18;
-      dist += (q.y - 0.5) * 0.18;
+      dist += (length(r) - 0.7) * 0.30;
+      dist += (q.x - 0.5) * 0.10;
+      dist += (q.y - 0.5) * 0.10;
 
-      float radial = 1.0 - smoothstep(0.08, 0.50, dist);
-      radial = pow(radial, 1.3);
+      float radial = 1.0 - smoothstep(0.18, 0.55, dist);
+      radial = pow(radial, 1.2);
 
       float n1 = fbm(uv * 2.2 + off1);
       float n2 = fbm(uv * 4.0 + off2);
@@ -217,14 +218,14 @@
     function loop() {
       if (!visible) return;
       // Slow but visible drift: 1.0 unit per ~10 seconds
-      const t = (performance.now() - startTime) * 0.0001;
+      const t = (performance.now() - startTime) * 0.00018;
       render(t);
       raf = requestAnimationFrame(loop);
     }
 
     new ResizeObserver(() => {
       resize();
-      render((performance.now() - startTime) * 0.0001);
+      render((performance.now() - startTime) * 0.00018);
     }).observe(quote);
 
     if ('IntersectionObserver' in window) {
