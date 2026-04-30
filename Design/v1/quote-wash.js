@@ -8,20 +8,20 @@
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   // Palettes in linear-ish RGB. Used under mix-blend-mode: multiply, so
-  // values are tuned to multiply with the cream background and produce
-  // visible darkening without going too saturated.
+  // values represent the source colour the cream bg gets multiplied by.
+  // Lower values = stronger darkening.
   const criticPalettes = [
-    { c1: [0.55, 0.55, 0.50], c2: [0.82, 0.82, 0.76] }, // warm grey
-    { c1: [0.50, 0.52, 0.54], c2: [0.78, 0.80, 0.82] }, // cool grey
-    { c1: [0.58, 0.54, 0.48], c2: [0.84, 0.80, 0.72] }, // sepia
-    { c1: [0.52, 0.52, 0.50], c2: [0.80, 0.80, 0.76] }, // neutral
+    { c1: [0.45, 0.45, 0.42], c2: [0.78, 0.78, 0.72] }, // warm grey
+    { c1: [0.42, 0.44, 0.46], c2: [0.74, 0.76, 0.78] }, // cool grey
+    { c1: [0.48, 0.44, 0.38], c2: [0.80, 0.76, 0.68] }, // sepia
+    { c1: [0.44, 0.44, 0.42], c2: [0.76, 0.76, 0.72] }, // neutral
   ];
 
   const marjutPalettes = [
-    { c1: [0.85, 0.50, 0.42], c2: [0.96, 0.82, 0.76] }, // soft red → peach
-    { c1: [0.80, 0.45, 0.48], c2: [0.94, 0.78, 0.78] }, // dusty rose
-    { c1: [0.88, 0.55, 0.45], c2: [0.97, 0.85, 0.76] }, // peach
-    { c1: [0.78, 0.42, 0.40], c2: [0.93, 0.75, 0.72] }, // brick rose
+    { c1: [0.78, 0.40, 0.32], c2: [0.95, 0.78, 0.72] }, // soft red → peach
+    { c1: [0.72, 0.36, 0.40], c2: [0.92, 0.74, 0.74] }, // dusty rose
+    { c1: [0.82, 0.46, 0.36], c2: [0.96, 0.82, 0.72] }, // peach
+    { c1: [0.70, 0.35, 0.34], c2: [0.90, 0.72, 0.68] }, // brick rose
   ];
 
   const vsSource = `
@@ -71,52 +71,40 @@
 
     void main() {
       vec2 uv = v_uv;
-      float aspect = u_resolution.x / u_resolution.y;
-      vec2 nuv = vec2(uv.x * aspect, uv.y);
+      // Use uv directly (range 0..1) for sampling, no aspect correction
+      // for the splotch geometry — that lets the splotch follow the
+      // canvas shape naturally.
 
       float t = u_time + u_seed * 23.0;
       vec2 off1 = vec2(t * 0.013, t * 0.009) + u_seed * 5.0;
       vec2 off2 = vec2(-t * 0.011, t * 0.014) + u_seed * 3.7;
       vec2 off3 = vec2(t * 0.008, -t * 0.012) + u_seed * 8.1;
 
-      // Domain-warped fbm — the noise itself perturbs sample coordinates
-      // for a second fbm. Produces flowy, organic shapes.
-      vec2 q = vec2(
-        fbm(nuv * 0.85 + off1),
-        fbm(nuv * 0.85 + off2)
-      );
+      // Domain-warped fbm
+      vec2 q = vec2(fbm(uv * 1.5 + off1), fbm(uv * 1.5 + off2));
       vec2 r = vec2(
-        fbm(nuv * 1.4 + 4.5 * q + off3),
-        fbm(nuv * 1.4 + 4.5 * q + vec2(8.3, 2.8) + off1)
+        fbm(uv * 2.2 + 4.0 * q + off3),
+        fbm(uv * 2.2 + 4.0 * q + vec2(8.3, 2.8) + off1)
       );
 
-      // Splotch from the centre of the canvas (which is centred on the
-      // text box). The radial distance is heavily perturbed by the
-      // domain-warped noise so the boundary is organic — not an ellipse.
+      // Splotch from the centre of the canvas. Distance is heavily
+      // perturbed by domain-warped noise so the boundary is organic.
       vec2 c = uv - 0.5;
-      c.x *= aspect;        // aspect-correct so it's not stretched
-      c.y *= 1.15;          // slight vertical compression for a wash that
-                            //  reads as horizontal rather than circular
-
       float dist = length(c);
-      // Heavy noise perturbation of the distance — the edge irregularity
-      // dominates over the geometric circle, so it never reads as one.
-      dist += (length(r) - 0.7) * 0.55;
-      dist += (q.x - 0.5) * 0.18;
-      dist += (q.y - 0.5) * 0.18;
+      dist += (length(r) - 0.7) * 0.35;
+      dist += (q.x - 0.5) * 0.15;
+      dist += (q.y - 0.5) * 0.15;
 
-      // Soft falloff from centre. The smoothstep range is tuned so the
-      // wash naturally fades to zero well inside the canvas, no edge.
-      float radial = 1.0 - smoothstep(0.05, 0.42, dist);
-      radial = pow(radial, 1.5);
+      // Soft falloff: the wash extends across most of the canvas and
+      // tapers to zero before the edge.
+      float radial = 1.0 - smoothstep(0.08, 0.50, dist);
+      radial = pow(radial, 1.3);
 
-      // Internal noise gives texture variation within the wash
-      float n1 = fbm(nuv * 1.6 + off1);
-      float n2 = fbm(nuv * 3.0 + off2);
-      float internal = 0.55 + n1 * 0.35 + n2 * 0.25;
-
-      // Paint grain — fine high-frequency noise for paint texture
-      float grain = 0.7 + fbm(nuv * 7.0 + r) * 0.5;
+      // Internal density variation
+      float n1 = fbm(uv * 2.2 + off1);
+      float n2 = fbm(uv * 4.0 + off2);
+      float internal = 0.65 + n1 * 0.45;
+      float grain = 0.75 + fbm(uv * 8.0 + r) * 0.4;
 
       float density = radial * internal * grain;
       density = clamp(density, 0.0, 1.0);
@@ -125,8 +113,9 @@
       float mixT = smoothstep(0.10, 0.80, length(r) + n1 * 0.3);
       vec3 color = mix(u_color2, u_color1, mixT);
 
+      // Premultiplied alpha output: source colour pre-multiplied by alpha
       float alpha = density * u_alpha;
-      gl_FragColor = vec4(color, alpha);
+      gl_FragColor = vec4(color * alpha, alpha);
     }
   `;
 
@@ -162,7 +151,7 @@
     canvas.className = 'quote-wash';
     quote.insertBefore(canvas, quote.firstChild);
 
-    const gl = canvas.getContext('webgl', { premultipliedAlpha: false, antialias: true, alpha: true });
+    const gl = canvas.getContext('webgl', { premultipliedAlpha: true, antialias: true, alpha: true });
     if (!gl) {
       // Fallback: simple background colour
       canvas.remove();
@@ -269,8 +258,8 @@
         ? marjutPalettes[(marjut_i++) % marjutPalettes.length]
         : criticPalettes[(critic_i++) % criticPalettes.length];
       const seed = ((i * 0.6180339887) % 1.0) * 10.0;
-      // Alphas tuned for mix-blend-mode: multiply on the cream bg.
-      const alpha = isMarjut ? 0.85 : 0.75;
+      // Alphas for premultiplied output under mix-blend-mode: multiply.
+      const alpha = isMarjut ? 0.95 : 0.85;
       setup(q, palette, seed, alpha);
     });
   }
