@@ -69,7 +69,7 @@ a { color: var(--ink); text-decoration: underline; text-underline-offset: 0.18em
 a:hover { color: var(--accent); }
 
 /* Masthead */
-.masthead { margin: 0 0 14vh 0; }
+.masthead { margin: 0 0 6vh 0; }
 
 .wordmark {
   font-size: var(--heading-l);
@@ -202,11 +202,17 @@ section {
 /* Pull quotes — typographic only.
    Voice is signalled by colour and a lighter weight against the
    body text's regular weight. Critics speak softly in warm grey,
-   Marjut speaks in the accent red. */
+   Marjut speaks in the accent red. A thin left rule in the same
+   colour as the text indents and frames the quote without weight. */
 .pull {
   margin: 2.5em 0;
-  padding: 0;
+  padding: 0 0 0 1.6em;
   border: none;
+  border-left: 1px solid var(--ink-soft);
+}
+
+.pull.voice-marjut {
+  border-left-color: var(--accent);
 }
 
 .pull p {
