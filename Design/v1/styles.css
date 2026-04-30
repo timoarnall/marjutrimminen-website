@@ -240,9 +240,6 @@ section {
   z-index: 0;
   display: block;
   pointer-events: none;
-  /* Subtractive — the wash darkens the cream background like ink on paper,
-     never lightens it. */
-  mix-blend-mode: multiply;
 }
 
 /* Details / credits */

@@ -71,36 +71,30 @@
 
     void main() {
       vec2 uv = v_uv;
-      // Use uv directly (range 0..1) for sampling, no aspect correction
-      // for the splotch geometry — that lets the splotch follow the
-      // canvas shape naturally.
 
       float t = u_time + u_seed * 23.0;
-      vec2 off1 = vec2(t * 0.013, t * 0.009) + u_seed * 5.0;
-      vec2 off2 = vec2(-t * 0.011, t * 0.014) + u_seed * 3.7;
-      vec2 off3 = vec2(t * 0.008, -t * 0.012) + u_seed * 8.1;
+      vec2 off1 = vec2(t * 0.13, t * 0.09) + u_seed * 5.0;
+      vec2 off2 = vec2(-t * 0.11, t * 0.14) + u_seed * 3.7;
+      vec2 off3 = vec2(t * 0.08, -t * 0.12) + u_seed * 8.1;
 
-      // Domain-warped fbm
+      // Domain-warped fbm — the noise itself perturbs sample coordinates
       vec2 q = vec2(fbm(uv * 1.5 + off1), fbm(uv * 1.5 + off2));
       vec2 r = vec2(
         fbm(uv * 2.2 + 4.0 * q + off3),
         fbm(uv * 2.2 + 4.0 * q + vec2(8.3, 2.8) + off1)
       );
 
-      // Splotch from the centre of the canvas. Distance is heavily
-      // perturbed by domain-warped noise so the boundary is organic.
+      // Splotch from the centre of the canvas, distance perturbed
+      // heavily by noise so the boundary is organic, not elliptical.
       vec2 c = uv - 0.5;
       float dist = length(c);
       dist += (length(r) - 0.7) * 0.35;
-      dist += (q.x - 0.5) * 0.15;
-      dist += (q.y - 0.5) * 0.15;
+      dist += (q.x - 0.5) * 0.18;
+      dist += (q.y - 0.5) * 0.18;
 
-      // Soft falloff: the wash extends across most of the canvas and
-      // tapers to zero before the edge.
       float radial = 1.0 - smoothstep(0.08, 0.50, dist);
       radial = pow(radial, 1.3);
 
-      // Internal density variation
       float n1 = fbm(uv * 2.2 + off1);
       float n2 = fbm(uv * 4.0 + off2);
       float internal = 0.65 + n1 * 0.45;
@@ -111,11 +105,20 @@
 
       // Colour varies across the warped field
       float mixT = smoothstep(0.10, 0.80, length(r) + n1 * 0.3);
-      vec3 color = mix(u_color2, u_color1, mixT);
+      vec3 washColor = mix(u_color2, u_color1, mixT);
 
-      // Premultiplied alpha output: source colour pre-multiplied by alpha
+      // Subtractive: do the multiply ourselves against the cream
+      // background colour, so the wash always darkens the page even
+      // without relying on mix-blend-mode (which is unreliable on
+      // WebGL canvases). The output is the page bg pre-multiplied by
+      // the wash colour — i.e., what the cream would look like with
+      // ink soaked into it.
+      const vec3 cream = vec3(0.957, 0.937, 0.902);
+      vec3 multiplied = cream * washColor;
+
       float alpha = density * u_alpha;
-      gl_FragColor = vec4(color * alpha, alpha);
+      // Premultiplied alpha output
+      gl_FragColor = vec4(multiplied * alpha, alpha);
     }
   `;
 
@@ -213,15 +216,15 @@
 
     function loop() {
       if (!visible) return;
-      // Extremely slow: 1.0 unit per ~50 seconds
-      const t = (performance.now() - startTime) * 0.00002;
+      // Slow but visible drift: 1.0 unit per ~10 seconds
+      const t = (performance.now() - startTime) * 0.0001;
       render(t);
       raf = requestAnimationFrame(loop);
     }
 
     new ResizeObserver(() => {
       resize();
-      render((performance.now() - startTime) * 0.00002);
+      render((performance.now() - startTime) * 0.0001);
     }).observe(quote);
 
     if ('IntersectionObserver' in window) {
