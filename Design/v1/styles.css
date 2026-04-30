@@ -199,36 +199,67 @@ section {
 /* Lede */
 .lede { max-width: 56ch; margin: 0 0 2em 0; }
 
-/* Pull quotes — Marjut and critic */
+/* SVG filter holder — invisible */
+.filter-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+/* Pull quotes — terminated by a slow, painterly brushstroke */
 .pull {
-  margin: 2.5em 0;
-  padding: 1.2em 0 1.2em 2em;
-  border-left: 3px solid var(--ink-soft);
+  margin: 1.5em 0 2.4em 0;
+  padding: 0;
+  border: none;
   max-width: 60ch;
 }
 
 .pull p {
-  margin: 0 0 0.8em 0;
+  margin: 0 0 0.4em 0;
   color: var(--ink);
 }
 
 .pull cite {
   font-style: normal;
-  color: var(--ink-soft);
+  color: var(--ink-faint);
   display: block;
+  margin-bottom: 0.6em;
 }
 
 .pull cite .src {
   color: var(--ink-faint);
 }
 
-.pull.voice-marjut {
-  border-left-color: var(--accent);
-  background: var(--accent-bg);
-  padding-right: 1.5em;
+.pull::after {
+  content: '';
+  display: block;
+  height: 6px;
+  width: 42%;
+  margin-top: 0.2em;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    var(--ink-soft) 8%,
+    var(--ink-soft) 70%,
+    transparent 100%);
+  filter: url(#brushstroke) blur(0.4px);
+  opacity: 0.55;
+  transition: width 1.2s ease;
 }
+
 .pull.voice-marjut cite { color: var(--accent); }
-.pull.voice-marjut cite .src { color: var(--ink-soft); }
+.pull.voice-marjut::after {
+  background: linear-gradient(90deg,
+    transparent 0%,
+    var(--accent) 8%,
+    var(--accent) 70%,
+    transparent 100%);
+  opacity: 0.7;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pull::after { filter: blur(0.4px); }
+}
 
 /* Details / credits */
 details {
