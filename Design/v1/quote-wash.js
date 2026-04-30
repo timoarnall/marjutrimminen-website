@@ -7,20 +7,21 @@
 (() => {
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // Palettes in linear-ish RGB. Alpha is applied per-fragment in the shader.
-  // c1 is the deeper hue, c2 the lighter — fbm mixes between them.
+  // Palettes in linear-ish RGB. Used under mix-blend-mode: multiply, so
+  // values are tuned to multiply with the cream background and produce
+  // visible darkening without going too saturated.
   const criticPalettes = [
-    { c1: [0.42, 0.42, 0.38], c2: [0.66, 0.66, 0.60] }, // warm grey
-    { c1: [0.40, 0.42, 0.44], c2: [0.62, 0.64, 0.66] }, // cool grey
-    { c1: [0.46, 0.43, 0.38], c2: [0.70, 0.66, 0.58] }, // sepia grey
-    { c1: [0.38, 0.40, 0.40], c2: [0.60, 0.62, 0.60] }, // neutral grey
+    { c1: [0.55, 0.55, 0.50], c2: [0.82, 0.82, 0.76] }, // warm grey
+    { c1: [0.50, 0.52, 0.54], c2: [0.78, 0.80, 0.82] }, // cool grey
+    { c1: [0.58, 0.54, 0.48], c2: [0.84, 0.80, 0.72] }, // sepia
+    { c1: [0.52, 0.52, 0.50], c2: [0.80, 0.80, 0.76] }, // neutral
   ];
 
   const marjutPalettes = [
-    { c1: [0.78, 0.42, 0.32], c2: [0.95, 0.78, 0.70] }, // soft red → peach
-    { c1: [0.72, 0.38, 0.40], c2: [0.94, 0.74, 0.74] }, // dusty rose
-    { c1: [0.82, 0.48, 0.38], c2: [0.96, 0.82, 0.72] }, // peach
-    { c1: [0.70, 0.34, 0.30], c2: [0.92, 0.70, 0.66] }, // brick rose
+    { c1: [0.85, 0.50, 0.42], c2: [0.96, 0.82, 0.76] }, // soft red → peach
+    { c1: [0.80, 0.45, 0.48], c2: [0.94, 0.78, 0.78] }, // dusty rose
+    { c1: [0.88, 0.55, 0.45], c2: [0.97, 0.85, 0.76] }, // peach
+    { c1: [0.78, 0.42, 0.40], c2: [0.93, 0.75, 0.72] }, // brick rose
   ];
 
   const vsSource = `
@@ -78,45 +79,50 @@
       vec2 off2 = vec2(-t * 0.011, t * 0.014) + u_seed * 3.7;
       vec2 off3 = vec2(t * 0.008, -t * 0.012) + u_seed * 8.1;
 
-      // Domain warp — sample fbm to get an offset, then sample fbm again
-      // at the warped coordinates. Produces organic, flowy shapes with no
-      // geometric primitives anywhere.
+      // Domain-warped fbm — the noise itself perturbs sample coordinates
+      // for a second fbm. Produces flowy, organic shapes.
       vec2 q = vec2(
-        fbm(nuv * 0.7 + off1),
-        fbm(nuv * 0.7 + off2)
+        fbm(nuv * 0.85 + off1),
+        fbm(nuv * 0.85 + off2)
       );
       vec2 r = vec2(
-        fbm(nuv * 1.2 + 4.0 * q + off3),
-        fbm(nuv * 1.2 + 4.0 * q + vec2(8.3, 2.8) + off1)
+        fbm(nuv * 1.4 + 4.5 * q + off3),
+        fbm(nuv * 1.4 + 4.5 * q + vec2(8.3, 2.8) + off1)
       );
 
-      // The shape itself — a stretched-horizontal noise field, threshold-
-      // shaped into a brushstroke-like wash. The fbm inputs are biased
-      // (vec2 multiplier) so features are wider in x than y — gives a
-      // horizontal streak rather than blobs.
-      vec2 strokeUV = nuv * vec2(0.85, 2.4) + 1.5 * r;
-      float stroke = fbm(strokeUV);
+      // Splotch from the centre of the canvas (which is centred on the
+      // text box). The radial distance is heavily perturbed by the
+      // domain-warped noise so the boundary is organic — not an ellipse.
+      vec2 c = uv - 0.5;
+      c.x *= aspect;        // aspect-correct so it's not stretched
+      c.y *= 1.15;          // slight vertical compression for a wash that
+                            //  reads as horizontal rather than circular
 
-      // Secondary stroke at a different scale + offset for variety
-      vec2 strokeUV2 = nuv * vec2(1.3, 3.0) + 2.0 * q + off2;
-      float stroke2 = fbm(strokeUV2);
+      float dist = length(c);
+      // Heavy noise perturbation of the distance — the edge irregularity
+      // dominates over the geometric circle, so it never reads as one.
+      dist += (length(r) - 0.7) * 0.55;
+      dist += (q.x - 0.5) * 0.18;
+      dist += (q.y - 0.5) * 0.18;
 
-      // Paint grain — a fine-texture noise for the watercolour grain
-      float grain = fbm(nuv * 6.0 + r) * 0.5 + 0.5;
+      // Soft falloff from centre. The smoothstep range is tuned so the
+      // wash naturally fades to zero well inside the canvas, no edge.
+      float radial = 1.0 - smoothstep(0.05, 0.42, dist);
+      radial = pow(radial, 1.5);
 
-      // Threshold to brushstroke shape. The wash is what survives the
-      // smoothstep — areas below 0.20 give nothing, 0.55 and above give
-      // full paint. fbm tends to centre around 0.45, so we get broad
-      // washes with naturally tapered organic boundaries.
-      float washA = smoothstep(0.18, 0.55, stroke);
-      float washB = smoothstep(0.22, 0.55, stroke2) * 0.6;
-      float density = washA + washB * 0.5;
-      density *= (0.7 + grain * 0.4);
+      // Internal noise gives texture variation within the wash
+      float n1 = fbm(nuv * 1.6 + off1);
+      float n2 = fbm(nuv * 3.0 + off2);
+      float internal = 0.55 + n1 * 0.35 + n2 * 0.25;
+
+      // Paint grain — fine high-frequency noise for paint texture
+      float grain = 0.7 + fbm(nuv * 7.0 + r) * 0.5;
+
+      float density = radial * internal * grain;
       density = clamp(density, 0.0, 1.0);
 
-      // Colour mixed across the warped field — different regions show
-      // different parts of the palette
-      float mixT = smoothstep(0.10, 0.85, length(r) + stroke * 0.3);
+      // Colour varies across the warped field
+      float mixT = smoothstep(0.10, 0.80, length(r) + n1 * 0.3);
       vec3 color = mix(u_color2, u_color1, mixT);
 
       float alpha = density * u_alpha;
@@ -263,7 +269,8 @@
         ? marjutPalettes[(marjut_i++) % marjutPalettes.length]
         : criticPalettes[(critic_i++) % criticPalettes.length];
       const seed = ((i * 0.6180339887) % 1.0) * 10.0;
-      const alpha = isMarjut ? 0.65 : 0.50;
+      // Alphas tuned for mix-blend-mode: multiply on the cream bg.
+      const alpha = isMarjut ? 0.85 : 0.75;
       setup(q, palette, seed, alpha);
     });
   }

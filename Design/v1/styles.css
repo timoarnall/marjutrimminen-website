@@ -125,7 +125,6 @@ section {
 
 .chapter-intro {
   color: var(--ink-soft);
-  max-width: 60ch;
   margin: 0 0 4em 0;
 }
 
@@ -197,7 +196,7 @@ section {
 .more:hover { color: var(--ink); }
 
 /* Lede */
-.lede { max-width: 56ch; margin: 0 0 2em 0; }
+.lede { margin: 0 0 2em 0; }
 
 /* Pull quotes — text sits on a slowly drifting watercolour wash
    rendered via WebGL shader (see quote-wash.js).
@@ -234,13 +233,16 @@ section {
 
 .quote-wash {
   position: absolute;
-  top: -3.5em;
-  bottom: -3.5em;
-  left: -5em;
-  right: -5em;
+  top: -4em;
+  bottom: -4em;
+  left: -6em;
+  right: -6em;
   z-index: 0;
   display: block;
   pointer-events: none;
+  /* Subtractive — the wash darkens the cream background like ink on paper,
+     never lightens it. */
+  mix-blend-mode: multiply;
 }
 
 /* Details / credits */
