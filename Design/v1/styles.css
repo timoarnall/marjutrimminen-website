@@ -198,18 +198,23 @@ section {
 /* Lede */
 .lede { margin: 0 0 2em 0; }
 
-/* Pull quotes — text sits on a slowly drifting watercolour wash
-   rendered via WebGL shader (see quote-wash.js).
-   The wash spills well beyond the quote box and falls off softly. */
+/* SVG filter holder — invisible */
+.filter-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+/* Pull quotes — full body width, watercolour wash behind. */
 .pull {
   position: relative;
   margin: 3.5em 0;
-  padding: 0.4em 0.8em;
+  padding: 0;
   border: none;
-  max-width: 64ch;
 }
 
-.pull > *:not(canvas) {
+.pull > *:not(.quote-wash) {
   position: relative;
   z-index: 1;
 }
@@ -221,25 +226,40 @@ section {
 
 .pull cite {
   font-style: normal;
-  color: var(--ink-faint);
+  color: var(--ink);
   display: block;
 }
 
 .pull cite .src {
-  color: var(--ink-faint);
+  color: var(--ink-soft);
 }
 
 .pull.voice-marjut cite { color: var(--accent); }
 
+/* Watercolour wash: a div with a soft radial-gradient background
+   distorted by an SVG feTurbulence + feDisplacementMap filter, then
+   composited as a multiply blend so it darkens the cream like ink. */
 .quote-wash {
   position: absolute;
-  top: -4em;
-  bottom: -4em;
-  left: -6em;
-  right: -6em;
+  top: -3em;
+  bottom: -3em;
+  left: -5em;
+  right: -5em;
   z-index: 0;
-  display: block;
   pointer-events: none;
+  background: radial-gradient(
+    ellipse 70% 80% at 50% 50%,
+    var(--wash-c1) 0%,
+    var(--wash-c2) 38%,
+    transparent 68%
+  );
+  filter: var(--wash-filter, url(#wash-0));
+  mix-blend-mode: multiply;
+  opacity: 0.85;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .filter-defs animate { display: none; }
 }
 
 /* Details / credits */

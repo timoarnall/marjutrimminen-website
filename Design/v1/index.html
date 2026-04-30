@@ -13,6 +13,47 @@
 </head>
 <body>
 
+<svg class="filter-defs" aria-hidden="true" focusable="false">
+  <defs>
+    <filter id="wash-0" x="-25%" y="-30%" width="150%" height="160%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.011 0.42" numOctaves="3" seed="2">
+        <animate attributeName="seed" values="0;160;0" dur="55s" repeatCount="indefinite"/>
+      </feTurbulence>
+      <feDisplacementMap in="SourceGraphic" scale="60"/>
+    </filter>
+    <filter id="wash-1" x="-25%" y="-30%" width="150%" height="160%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.013 0.38" numOctaves="3" seed="11">
+        <animate attributeName="seed" values="40;200;40" dur="62s" repeatCount="indefinite"/>
+      </feTurbulence>
+      <feDisplacementMap in="SourceGraphic" scale="55"/>
+    </filter>
+    <filter id="wash-2" x="-25%" y="-30%" width="150%" height="160%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.015 0.44" numOctaves="3" seed="23">
+        <animate attributeName="seed" values="80;240;80" dur="48s" repeatCount="indefinite"/>
+      </feTurbulence>
+      <feDisplacementMap in="SourceGraphic" scale="65"/>
+    </filter>
+    <filter id="wash-3" x="-25%" y="-30%" width="150%" height="160%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.010 0.40" numOctaves="3" seed="42">
+        <animate attributeName="seed" values="120;280;120" dur="58s" repeatCount="indefinite"/>
+      </feTurbulence>
+      <feDisplacementMap in="SourceGraphic" scale="70"/>
+    </filter>
+    <filter id="wash-4" x="-25%" y="-30%" width="150%" height="160%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.014 0.36" numOctaves="3" seed="61">
+        <animate attributeName="seed" values="60;220;60" dur="51s" repeatCount="indefinite"/>
+      </feTurbulence>
+      <feDisplacementMap in="SourceGraphic" scale="58"/>
+    </filter>
+    <filter id="wash-5" x="-25%" y="-30%" width="150%" height="160%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.012 0.46" numOctaves="3" seed="83">
+        <animate attributeName="seed" values="100;260;100" dur="46s" repeatCount="indefinite"/>
+      </feTurbulence>
+      <feDisplacementMap in="SourceGraphic" scale="62"/>
+    </filter>
+  </defs>
+</svg>
+
 <header class="masthead">
   <h1 class="wordmark">Marjut Rimminen</h1>
   <p class="strapline">Animation. London and Helsinki.</p>
@@ -224,7 +265,7 @@
       <p class="film-collab">Directed by Liisa Helminen and Marjut Rimminen, based on Hannele Huovi's books</p>
     </header>
     <figure class="film-image"><img src="images/urpo-turpo/UT-2.jpg" alt="Still from Urpo and Turpo — the two bears" loading="lazy"></figure>
-    <p class="lede">A Finnish stop-motion animated television series for children, based on Hannele Huovi's books. Teddy bears Urpo and Turpo live on a bookshelf in the children's room and are avaricious readers, particularly of the classics. A new register and new territory for Marjut.</p>
+    <p class="lede">A Finnish stop-motion animated television series for children, based on Hannele Huovi's books. Teddy bears Urpo and Turpo live on a bookshelf in the children's room and are avaricious readers, particularly of the classics.</p>
     <figure class="film-image"><img src="images/urpo-turpo/UT-1.jpg" alt="Still from Urpo and Turpo" loading="lazy"></figure>
     <blockquote class="pull voice-critic">
       <p>Urpo and Turpo are without a doubt Finland's funniest bears. Children, adults and critics alike fell in love first with the books and then with the autumn animated series. For animator Marjut Rimminen, the series was a new challenge.</p>
