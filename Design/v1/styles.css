@@ -198,19 +198,11 @@ section {
 /* Lede */
 .lede { margin: 0 0 2em 0; }
 
-/* Pull quotes — full body width, watercolour wash behind via WebGL
-   canvas (see quote-wash.js). The wash spills well beyond the quote
-   box and falls off softly. */
+/* Pull quotes — typographic highlighting only. */
 .pull {
-  position: relative;
-  margin: 3.5em 0;
+  margin: 2.5em 0;
   padding: 0;
   border: none;
-}
-
-.pull > *:not(canvas) {
-  position: relative;
-  z-index: 1;
 }
 
 .pull p {
@@ -229,17 +221,6 @@ section {
 }
 
 .pull.voice-marjut cite { color: var(--accent); }
-
-.quote-wash {
-  position: absolute;
-  top: -3.5em;
-  bottom: -3.5em;
-  left: -5em;
-  right: -5em;
-  z-index: 0;
-  display: block;
-  pointer-events: none;
-}
 
 /* Details / credits */
 details {
