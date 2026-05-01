@@ -200,8 +200,14 @@ section {
   display: block;
 }
 
+/* When a note follows a video, drop the video's bottom margin so the
+   note sits close to the player rather than midway to the next image. */
+.film-video:has(+ .film-video-note) {
+  margin-bottom: 0;
+}
+
 .film-video-note {
-  margin: 0.6em 0 0 0;
+  margin: 0.4em 0 2em 0;
   color: var(--ink-soft);
   font-size: 0.95em;
 }
