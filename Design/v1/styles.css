@@ -181,8 +181,14 @@ section {
   margin: 0 0 2em 0;
   position: relative;
   width: 100%;
-  padding-top: 56.25%; /* 16:9 */
+  /* Default 4:3 — most of Marjut's films are 16mm or 35mm at this
+     ratio. Override with class .is-16-9 for modern widescreen. */
+  padding-top: 75%;
   background: var(--ink);
+}
+
+.film-video.is-16-9 {
+  padding-top: 56.25%;
 }
 
 .film-video iframe {
