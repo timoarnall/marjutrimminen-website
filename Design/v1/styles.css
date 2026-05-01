@@ -15,14 +15,18 @@
   --accent-soft: #c78372;
   --accent-bg: rgba(168, 58, 37, 0.06);
 
-  --body: 1.125rem;        /* 18px base */
-  --heading-m: calc(var(--body) * 2);    /* 2x */
-  --heading-l: calc(var(--body) * 4);    /* 4x */
+  --body: 1.125rem;
+  /* Headings scale with the viewport. clamp(min, fluid, max).
+     On a 320px screen heading-l is ~36px; on desktop it caps at 4.5rem. */
+  --heading-m: clamp(1.5rem, 4vw + 0.75rem, 2.25rem);
+  --heading-l: clamp(2.25rem, 7vw + 0.5rem, 4.5rem);
   --lh-tight: 1;
   --lh-body: 1.5;
 }
 
 * { box-sizing: border-box; }
+
+html { overflow-x: hidden; }
 
 html, body {
   margin: 0;
@@ -35,12 +39,18 @@ html, body {
   line-height: var(--lh-body);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
 }
 
 em, i, cite { font-style: normal; }
 
+img, iframe, video, figure {
+  max-width: 100%;
+}
+
 body {
-  padding: 5vw 6vw 10vw;
+  padding: 4vw 6vw 8vw;
   max-width: 1400px;
   margin: 0 auto;
 }
@@ -89,7 +99,7 @@ a:hover { color: var(--accent); }
   z-index: 50;
   background: var(--bg);
   padding: 1em 0;
-  margin: 0 0 8vh 0;
+  margin: 0 0 6vh 0;
   border-top: 1px solid var(--rule);
   border-bottom: 1px solid var(--rule);
 }
@@ -111,7 +121,7 @@ a:hover { color: var(--accent); }
 
 /* Sections */
 section {
-  margin: 0 0 18vh 0;
+  margin: 0 0 12vh 0;
   max-width: 70ch;
 }
 
@@ -131,8 +141,8 @@ section {
 
 /* Films */
 .film {
-  margin: 0 0 14vh 0;
-  padding-top: 8vh;
+  margin: 0 0 9vh 0;
+  padding-top: 5vh;
   border-top: 1px solid var(--rule);
 }
 
@@ -436,14 +446,43 @@ ul.awards strong {
 @media (max-width: 720px) {
   :root { --body: 1rem; }
 
-  body { padding: 8vw 6vw 14vw; }
+  body { padding: 6vw 5vw 12vw; }
 
+  /* Tighter vertical rhythm on mobile */
+  section { margin: 0 0 8vh 0; }
+  .film { margin: 0 0 7vh 0; padding-top: 4vh; }
+  .masthead { margin: 0 0 4vh 0; }
+  .chapters { margin: 0 0 5vh 0; }
+
+  /* Strapline can sit closer to the wordmark */
+  .strapline { margin-top: 0.5em; }
+
+  /* Credits: stack to one column */
   dl.credits {
     grid-template-columns: 1fr;
     gap: 0.1em 0;
   }
+  dl.credits dt {
+    margin-top: 0.6em;
+    font-size: 0.95em;
+  }
 
-  dl.credits dt { margin-top: 0.6em; }
+  /* Pull quotes: tighter padding so they don't look cramped */
+  .pull { padding: 0 0 0 1em; }
+
+  /* Film alt-titles wrap onto their own line on narrow screens */
+  .film-title-alt {
+    display: block;
+    margin-left: 0;
+    margin-top: 0.1em;
+  }
+
+  /* Chapter nav: tighter horizontal gap when wrapping */
+  .chapters ol { gap: 0.4em 1.4em; }
+
+  /* Eyebrow and chapter-intro: less margin */
+  .eyebrow { margin: 0 0 1.2em 0; }
+  .chapter-intro { margin: 0 0 2.5em 0; }
 }
 
 /* Print */
