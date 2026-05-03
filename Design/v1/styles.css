@@ -240,15 +240,6 @@ section {
   margin-top: 0.5em;
 }
 
-/* Archive crops — placeholders pulled from low-resolution scans of
-   Marjut's A4 reference folder. Display at natural pixel size so they
-   don't pixelate, sit on the left like an inline document image rather
-   than a full-bleed still. */
-.film-image.is-archive img {
-  width: auto;
-  max-width: 100%;
-}
-
 /* Featured */
 .featured { margin-bottom: 22vh; }
 
